@@ -156,36 +156,44 @@ def generate_starfish_input_csv(enterprise):
         i.write("My GitHub Id is:,EMAIL\n")
         for member in enterprise.members:
             i.write(f"{member.login},{member.mail}\n")
+
+def generate_cache():
+    print("Generating new cache")
+    enterprise_new = Enterprise()
+    enterprise_new.members = get_samlidentities('johns-hopkins-university')
+
+    return enterprise_new
+
 try:
     contents = ''
-    with open("cached_data.json", 'r') as file:
-        contents = file.read()
+    enterprise = None
+    if os.path.exists("cached_data.json"):
+        with open("cached_data.json", 'r') as file:
+            contents = file.read()
 
-    enterprise = jsonpickle.decode(contents)
+            enterprise = jsonpickle.decode(contents)
 
     cache_limit = datetime.datetime.now() - datetime.timedelta(hours=3)
 
-    if enterprise.last_cached < cache_limit:
-        print("Generating new cache")
-        enterprise_new = Enterprise()
-        enterprise_new.members = get_samlidentities('johns-hopkins-university')
-
-        pickled = jsonpickle.encode(enterprise_new)
+    if enterprise is None or enterprise.last_cached < cache_limit:
+        enterprise = generate_cache()
+        pickled = jsonpickle.encode(enterprise)
 
         with open("cached_data.json", "w") as file:
             file.write(pickled)
     
         enterprise = enterprise
 
+    print(enterprise)
     generate_starfish_input_csv(enterprise)
 
-    p = subprocess.Popen(["/usr/bin/node", "index.js", "../starfish_input.csv", f"{(datetime.datetime.now() - datetime.timedelta(weeks=52)).isoformat()}", f"{datetime.datetime.now().isoformat()}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd="starfish", text=True)
-    stdout,stderr = p.communicate()
+    #p = subprocess.Popen(["/usr/bin/node", "index.js", "../starfish_input.csv", f"{(datetime.datetime.now() - datetime.timedelta(weeks=52)).isoformat()}", f"{datetime.datetime.now().isoformat()}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd="starfish", text=True)
+    #stdout,stderr = p.communicate()
 
-    os.remove(starfish_input)
-    voters = stdout.split("\n")[4:]
-    for email in voters:
-        print(email)
+    #os.remove(starfish_input)
+    #voters = stdout.split("\n")[4:]
+    #for email in voters:
+    #    print(email)
 
         
 except Exception as e:
