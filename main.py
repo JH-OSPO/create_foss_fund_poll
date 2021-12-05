@@ -10,6 +10,7 @@ token = os.environ['GITHUB_TOKEN']
 headers = {"Authorization": f"Bearer {token}"}
 ldap_password = os.environ['JHED_PASSWORD']
 ldap_username = os.environ['JHED_ID']
+github_slug = os.getenv(['GH_SLUG'], default="johns-hopkins-university")
 
 starfish_input = "starfish_input.csv"
 
@@ -160,7 +161,7 @@ def generate_starfish_input_csv(enterprise):
 def generate_cache():
     print("Generating new cache")
     enterprise_new = Enterprise()
-    enterprise_new.members = get_samlidentities('johns-hopkins-university')
+    enterprise_new.members = get_samlidentities()
 
     return enterprise_new
 
